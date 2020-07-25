@@ -1,10 +1,7 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link type="text/css" href="{{ url_for('static', filename='css/styles.css')}}" rel="stylesheet" />
 {% block title -%}
 {% if title %}
     <title>Про Flask - {{title}}</title>
@@ -16,17 +13,20 @@
 <body>
 {% block content -%}
     {%- block mainmanu -%}
-<ul>
+<ul class="mainmenu">
         {% for m in menu -%}
-        <li>{{m}}</li>
+    <li><a href="{{m.url}}">{{m.name}}</a></li>
         {% endfor -%}
 </ul>
     {%- endblock -%}
+<div class="clear"></div>
+<div class="content">
     {% if title -%}
 <h1>{{title}}</h1>
     {% else -%}
 <h1>Про Flask</h1>
     {% endif -%}
 {% endblock -%}
+    </div>
 </body>
 </html>
