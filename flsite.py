@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from flask import Flask, render_template, request, g, flash, abort, redirect, url_for
+from flask import Flask, render_template, request, g, flash, abort, redirect, url_for, make_response
 from FDataBase import FDataBase
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
@@ -11,6 +11,7 @@ from UserLogin import UserLogin
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
 SECRET_KEY = 'sdfgsdfdfyhjdtyhnsfbsrtbndrnt'
+MAX_CONTENT_LENGTH = 1024 * 1024
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -141,8 +142,40 @@ def logout():
 @app.route('/profile')
 @login_required
 def profile():
-    return f"""<p><a href="{url_for('logout')}">Выйти из профиля</a>
-                <p>user info: {current_user.get_id()}"""
+    return render_template("profile.html", menu=dbase.getMenu(), title="Профиль")
+
+
+@app.route('/userava')
+@login_required
+def userava():
+    img = current_user.getAvatar(app)
+    if not img:
+        return ""
+
+    h = make_response(img)
+    h.headers['Content-Type'] = 'image/png'
+    return h
+
+
+@app.route('/upload', methods=["POST", "GET"])
+@login_required
+def upload():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and current_user.verifyExt(file.filename):
+            try:
+                img = file.read()
+                res = dbase.updateUserAvatar(img, current_user.get_id())
+                if not res:
+                    flash("Ошибка одновления аватара", "error")
+                flash("Аватар обновлён", "error")
+            except FileNotFoundError as e:
+                flash("Ошибка чтения файта", "error")
+        else:
+            flash("Ошибка обновления аватара", "error")
+
+    return redirect(url_for('profile'))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
