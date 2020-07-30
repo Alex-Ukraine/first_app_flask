@@ -5,7 +5,7 @@ from FDataBase import FDataBase
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from UserLogin import UserLogin
-from forms import LoginForm
+from forms import LoginForm, RegisterForm
 
 # конфигурация
 DATABASE = '/tmp/flsite.db'
@@ -128,20 +128,17 @@ def login():
 
 @app.route("/register", methods=["POST", "GET"])
 def register():
-    if request.method == "POST":
-        if len(request.form['name']) > 4 and len(request.form['email']) > 4 \
-            and len(request.form['psw']) > 4 and request.form['psw'] == request.form['psw2']:
-            hash = generate_password_hash(request.form['psw'])
-            res = dbase.addUser(request.form['name'], request.form['email'], hash)
+    form = RegisterForm()
+    if form.validate_on_submit():
+            hash = generate_password_hash(form.psw.data)
+            res = dbase.addUser(form.name.data, form.email.data, hash)
             if res:
                 flash('Вы успешно зарегистрированы', category='success')
                 return redirect(url_for('login'))
             else:
                 flash('Ошибка при добавлении в БД', category='error')
-        else:
-            flash('Неверно указаны поля', category='error')
 
-    return render_template('register.html', menu=dbase.getMenu(), title="Регистрация")
+    return render_template('register.html', menu=dbase.getMenu(), title="Регистрация", form=form)
 
 
 @app.route('/logout')
